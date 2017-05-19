@@ -57,11 +57,21 @@ namespace eShopOnContainers.Identity
 
             services.Configure<AppSettings>(Configuration);
 
+            services.AddDataProtection(opts =>
+            {
+                opts.ApplicationDiscriminator = "eshop.identity";
+            });
+
             services.AddMvc();
 
             services.AddHealthChecks(checks =>
             {
-                checks.AddSqlCheck("Identity_Db", Configuration.GetConnectionString("DefaultConnection"));
+                var minutes = 1;
+                if (int.TryParse(Configuration["HealthCheck:Timeout"], out var minutesParsed))
+                {
+                    minutes = minutesParsed;
+                }
+                checks.AddSqlCheck("Identity_Db", Configuration.GetConnectionString("DefaultConnection"), TimeSpan.FromMinutes(minutes));
             });
 
             services.AddTransient<IEmailSender, AuthMessageSender>();
